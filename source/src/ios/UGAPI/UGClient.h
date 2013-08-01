@@ -37,7 +37,7 @@ set the response limit in UGQuery as well.
 
 @interface UGClient : NSObject
 
-+(int) version;
++(NSString *) version;
 
 /********************* INIT AND SETUP *********************/
 // init with an app ID
@@ -300,5 +300,12 @@ set the response limit in UGQuery as well.
 // encountered internally are logged. This can be helpful to see the actual
 // service communication in progress and help debug problems you may be having. 
 -(void)setLogging: (BOOL)loggingState;
+
+/*********************** VERSION CHECKING ************************/
+#define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
+#define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
+#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN(v)                 ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
+#define SYSTEM_VERSION_LESS_THAN_OR_EQUAL_TO(v)     ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
 
 @end

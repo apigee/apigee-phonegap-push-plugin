@@ -99,7 +99,6 @@ NSString * notifier = @"apple";
     if([options objectForKey:@"baseUrl"] != nil) {
         baseUrl = [options objectForKey:@"baseUrl"];
     }
-    NSLog(@"UG Init");
     
     UGClient * usergridClient = [[UGClient alloc] initWithOrganizationId:orgName withApplicationID:appName baseURL:baseUrl];
     //[UGClient getUniqueDeviceID];
@@ -110,6 +109,8 @@ NSString * notifier = @"apple";
                                                  withSound: @"chime"
                                                         to: thisDevice
                                              usingNotifier: [options objectForKey:@"notifier"]];
+    
+
     
     if (response.transactionState != kUGClientResponseSuccess) {
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"message not pushed"];

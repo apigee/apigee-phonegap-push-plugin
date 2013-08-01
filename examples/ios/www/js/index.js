@@ -42,13 +42,12 @@ var app = {
     onDeviceReady: function() {
         var pushNotification = window.plugins.pushNotification;
         pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
-            console.log(status);
             if(status.deviceToken) {
                 var options = {
                     "provider":"apigee",
                     "orgName":"YOUR APIGEE.COM USERNAME",
                     "appName":"sandbox",
-                    "notifier":"YOUR NOTIFIER",
+                    "notifier":"apple",
                     "token":status.deviceToken
                 };
 
@@ -61,15 +60,14 @@ var app = {
         $("#push").on("click", function(e){
             //push here
           pushNotification.getApigeeDeviceId(function(results){
-             console.log(results.deviceId);
              if(results.deviceId){
                  var options = {
                  "provider":"apigee",
                  "orgName":"YOUR APIGEE.COM USERNAME",
                  "appName":"sandbox",
-                 "notifier":"YOUR NOTIFIER",
+                 "notifier":"apple",
                  "deviceId":results.deviceId,
-                 "message":"Hello!"
+                 "message":"Hello! This is from PhoneGap!"
                  };
                 
                  pushNotification.pushNotificationToDevice(options, function(result){
