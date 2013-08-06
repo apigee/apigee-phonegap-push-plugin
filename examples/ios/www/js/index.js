@@ -40,41 +40,45 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
+        var client = new Apigee.Client({
+            orgName:"YOUR APIGEE.COM USERNAME",
+            appName:"sandbox",
+            logging:true
+        });
         var pushNotification = window.plugins.pushNotification;
         pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
             if(status.deviceToken) {
                 var options = {
-                    "provider":"apigee",
-                    "orgName":"YOUR APIGEE.COM USERNAME",
-                    "appName":"sandbox",
-                    "notifier":"apple",
-                    "token":status.deviceToken
+                    notifier:"appleDev",
+                    deviceToken:status.deviceToken
                 };
-
-                pushNotification.registerWithPushProvider(options, function(status){
-                    console.log(status);
+                
+                client.registerDevice(options, function(error, result){
+                  if(error) {
+                    console.log(error);
+                  } else {
+                    console.log(result);
+                  }
                 });
             }
         });
         
         $("#push").on("click", function(e){
             //push here
-          pushNotification.getApigeeDeviceId(function(results){
-             if(results.deviceId){
-                 var options = {
-                 "provider":"apigee",
-                 "orgName":"YOUR APIGEE.COM USERNAME",
-                 "appName":"sandbox",
-                 "notifier":"apple",
-                 "deviceId":results.deviceId,
-                 "message":"Hello! This is from PhoneGap!"
-                 };
-                
-                 pushNotification.pushNotificationToDevice(options, function(result){
-                       console.log(result);
-                 });
-             }
-          });
+            
+            var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
+            var options = {
+                notifier:"appleDev",
+                path:devicePath,
+                message:"hello world from JS"
+            };
+            client.sendPushToDevice(options, function(error, data){
+                if(error) {
+                    console.log(data);
+                } else {
+                    console.log("push sent");
+                }
+            });
         });
         
         app.receivedEvent('deviceready');
