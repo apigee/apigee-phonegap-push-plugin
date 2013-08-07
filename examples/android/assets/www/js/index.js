@@ -40,17 +40,17 @@ var app = {
         var pushNotification = window.pushNotification;
 
         var client = new Apigee.Client({
-            orgName:"mdobson",
+            orgName:"YOUR APIGEE.COM USERNAME",
             appName:"sandbox"
         });
 
         var gcmOptions = {
-            gcmSenderId:"579458729287"
+            gcmSenderId:"YOUR GCM SENDER ID"
         };
 
         pushNotification.registerDevice(gcmOptions, function(device){
             var options = {
-                notifier:"apigeepush",
+                notifier:"YOUR NOTIFIER",
                 deviceToken:device.deviceId
             };
             
@@ -66,7 +66,7 @@ var app = {
             //push here
             var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
             var options = {
-                notifier:"apigeepush",
+                notifier:"YOUR NOTIFIER",
                 path:devicePath,
                 message:"hello world from JS"
             };

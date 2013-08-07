@@ -152,11 +152,66 @@ Currently using Push Notifications through Apigee is the only method supported.
 
     <plugin name="PushNotification" value="org.usergrid.cordova.PushNotification"/>
 
+### Setting up the Apigee JavaScript Client
+
+The Apigee JavaScript client is required to register the device and send pushes via Apigee. To initialize simply include it in your webpage.
+
+    <script type="application/javascript" src="apigee.js"></script>
+
+Then Initialize your client in the device ready event handler.
+
+    var apigee = new Apigee.client({
+        orgName:"YOUR APIGEE.COM USERNAME",
+        appName:"YOUR APIGEE.COM APP"
+    });
+
+There are three relevant JavaScript functions needed to register devices and send pushes.
+
+`registerDevice()` performs registration with the Apigee App Services API. It takes an options object and notifier. It then registers the device with App Services.
+
+    var options = {
+        notifier:"YOUR NOTIFIER NAME",
+        deviceToken:status.deviceToken
+    };
+
+    client.registerDevice(options, function(error, result){
+        if(error) {
+            console.log(error);
+        } else {
+            console.log(result);
+        }
+    });
+
+
+`sendPushToDevice()` Sends a push notification to a desired `path` in App Services. The path can represent a single device entity, all devices that belong to a user, or all devices that belong to all users in a specified group.
+
+    //Send push to specific device.
+    var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
+    var options = {
+        notifier:"appleDev",
+        path:devicePath,
+        message:"hello world from JS"
+    };
+    client.sendPushToDevice(options, function(error, data){
+        if(error) {
+            console.log(data);
+        } else {
+            console.log("push sent");
+        }
+    });
+
+`getDeviceUUID()` Gets the unique UUID that Apigee has assigned our device in App Services. This is used to send a push to a specific device.
+
+    //Creates a path to a your current device.
+    var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
+
 
 ## JAVASCRIPT INTERFACE (IOS/ANDROID) ##
 
     // After device ready, create a local alias
     var pushNotification = window.plugins.pushNotification;
+
+
 
 `registerDevice()` does perform registration on Apple Push Notification servers (via user interaction) & retrieve the token that will be used to push remote notifications to this device.
 
@@ -166,46 +221,6 @@ Currently using Push Notifications through Apigee is the only method supported.
         // {"type":"7","pushBadge":"1","pushSound":"1","enabled":"1","deviceToken":"blablahblah","pushAlert":"1"}
         console.warn('registerDevice:%o', status);
         navigator.notification.alert(JSON.stringify(['registerDevice', status]));
-    });
-
-
-`registerWithPushProvider()` performs a registration with a third party push provider. Currently only Apigee App Services is supported.
-
-    pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
-        console.log(status);
-        if(status.deviceToken) {
-            var options = {
-                "notifier":"YOUR NOTIFIER NAME"
-                "provider":"apigee",
-                "orgName":"YOUR APIGEE.COM USERNAME",
-                "appName":"YOU APIGEE.COM APP",
-                "token":status.deviceToken
-            };
-
-            pushNotification.registerWithPushProvider(options, function(status){
-                console.log(status);
-            });
-        }
-    });
-
-`getApigeeDeviceId()` retrieves the Apigee based UUID for the current device.
-
-    pushNotification.getApigeeDeviceId(function(results){
-        console.log(results.deviceId);
-    });
-
-`pushNotificationToDevice()` sets up a push notification to a specific device. Please note the device id is the Apigee based UUID.
-
-    var options = {
-        "provider":"apigee",
-        "orgName":"YOUR APIGEE.COM USERNAME",
-        "appName":"YOUR APIGEE.COM APP",
-        "deviceId":results.deviceId,
-        "message":"Hello!"
-    };
-
-    pushNotification.pushNotificationToDevice(options, function(result){
-       console.log(result);
     });
 
 

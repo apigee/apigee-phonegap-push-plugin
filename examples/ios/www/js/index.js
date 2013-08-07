@@ -49,7 +49,7 @@ var app = {
         pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
             if(status.deviceToken) {
                 var options = {
-                    notifier:"appleDev",
+                    notifier:"YOUR NOTIFIER",
                     deviceToken:status.deviceToken
                 };
                 
@@ -68,7 +68,7 @@ var app = {
             
             var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
             var options = {
-                notifier:"appleDev",
+                notifier:"YOUR NOTIFIER",
                 path:devicePath,
                 message:"hello world from JS"
             };
