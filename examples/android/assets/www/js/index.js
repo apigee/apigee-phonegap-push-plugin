@@ -38,37 +38,44 @@ var app = {
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         var pushNotification = window.pushNotification;
+
+        var client = new Apigee.Client({
+            orgName:"mdobson",
+            appName:"sandbox"
+        });
+
         var gcmOptions = {
-            gcmSenderId:"YOUR GCM SENDER ID"
+            gcmSenderId:"579458729287"
         };
+
         pushNotification.registerDevice(gcmOptions, function(device){
             var options = {
-                provider:"apigee",
-                orgName:"YOUR APIGEE.COM USERNAME",
-                appName:"sandbox",
-                notifier:"android_push",
-                deviceId:device.deviceId
+                notifier:"apigeepush",
+                deviceToken:device.deviceId
             };
-
-
-            console.log(JSON.stringify(options));
             
-            pushNotification.registerWithPushProvider(options, function(result){
+            client.registerDevice(options, function(error, result){
+              if(error) {
+                console.log(error);
+              } else {
                 console.log(result);
-            })
+              }
+            });
         });
         $("#push").on("click", function(e){
             //push here
+            var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
             var options = {
-             provider:"apigee",
-             orgName:"YOUR APIGEE.COM USERNAME",
-             appName:"sandbox",
-             notifier:"android_push",
-             message:"Hello!"
+                notifier:"apigeepush",
+                path:devicePath,
+                message:"hello world from JS"
             };
-            
-            pushNotification.pushNotificationToDevice(options, function(result){
-                console.log(result);
+            client.sendPushToDevice(options, function(error, data){
+                if(error) {
+                    console.log(data);
+                } else {
+                    console.log("push sent");
+                }
             });
         });
         app.receivedEvent('deviceready');
