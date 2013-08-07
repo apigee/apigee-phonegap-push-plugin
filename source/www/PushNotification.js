@@ -55,10 +55,6 @@
 		cordova.exec(callback, callback, "PushNotification", "getDeviceUniqueIdentifier", []);
 	};
 
-    PushNotification.prototype.pushNotificationToDevice = function(options, callback){
-        cordova.exec(callback, callback, "PushNotification", "pushNotificationToDevice", [options]);
-    };
- 
     PushNotification.prototype.getApigeeDeviceId = function(callback){
         cordova.exec(callback, callback,"PushNotification", "getDeviceId", []);
     };
@@ -71,17 +67,7 @@
 		document.dispatchEvent(ev);
 	};
 
-	PushNotification.prototype.registrationCallback = function(registrationMessage) {
-		var ev = document.createEvent('HTMLEvents');
-		ev.deviceId = registrationMessage.deviceId;
-		ev.initEvent('push-registration', true, true, arguments);
-		document.dispatchEvent(ev);
-	};
 
-	// Call this to register with a specific push provider only supports Apigee.
-	PushNotification.prototype.registerWithPushProvider = function(options, callback){
-		cordova.exec(callback, callback, "PushNotification", "registerWithPushProvider", [options]);
-	};
  
 	/*cordova.addConstructor(function() {
 		if(!window.plugins) window.plugins = {};
