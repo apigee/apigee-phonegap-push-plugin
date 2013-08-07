@@ -41,16 +41,6 @@
 		cordova.exec(callback, callback, "PushNotification", "cancelAllLocalNotifications", []);
 	};
 
-	// Call this to retreive the original device unique id
-	// @warning As of today, usage is deprecated and requires explicit consent from the user
-	PushNotification.prototype.getDeviceUniqueIdentifier = function(callback) {
-		cordova.exec(callback, callback, "PushNotification", "getDeviceUniqueIdentifier", []);
-	};
-
-    PushNotification.prototype.pushNotificationToDevice = function(options, callback){
-        cordova.exec(callback, callback, "PushNotification", "pushNotificationToDevice", [options]);
-    };
- 
     PushNotification.prototype.getApigeeDeviceId = function(callback){
         cordova.exec(callback, callback,"PushNotification", "getDeviceId", []);
     };
@@ -62,11 +52,6 @@
 		ev.initEvent('push-notification', true, true, arguments);
 		document.dispatchEvent(ev);
 	};
-
-	// Call this to register with a specific push provider only supports Apigee.
-	PushNotification.prototype.registerWithPushProvider = function(options, callback){
-		cordova.exec(callback, callback, "PushNotification", "registerWithPushProvider", [options]);
-	}
  
 	cordova.addConstructor(function() {
 		if(!window.plugins) window.plugins = {};

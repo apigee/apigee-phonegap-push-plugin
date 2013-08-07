@@ -10,13 +10,8 @@
 #import "PushNotification.h"
 //#import <Cordova/JSONKit.h>
 #import <Cordova/CDVDebug.h>
-#import "OpenUDID.h"
-#import "UGClient.h"
-#import "UGClientResponse.h"
 
 @implementation PushNotification
-
-NSString * notifier = @"apple";
 
 @synthesize callbackIds = _callbackIds;
 @synthesize pendingNotifications = _pendingNotifications;
@@ -60,74 +55,6 @@ NSString * notifier = @"apple";
     
 }
 
--(void)registerWithPushProvider:(CDVInvokedUrlCommand *)command {
-    NSLog(@"registerWithProvider:%@",command);
-    [self.callbackIds setValue:command.callbackId forKey:@"registerWithPushProvider"];
-    NSDictionary *options = [command.arguments objectAtIndex:0];
-    
-    if([[options objectForKey:@"provider"] isEqualToString:@"apigee"]) {
-        
-        NSString * orgName = [options objectForKey:@"orgName"];
-        NSString * appName = [options objectForKey:@"appName"];
-        NSString * baseUrl = @"https://api.usergrid.com/";
-        if([options objectForKey:@"baseUrl"] != nil) {
-            baseUrl = [options objectForKey:@"baseUrl"];
-        }
-        NSLog(@"UG Init");
-        
-        UGClient * usergridClient = [[UGClient alloc] initWithOrganizationId:orgName withApplicationID:appName baseURL:baseUrl];
-        NSLog(@"Registering for push w/apigee");
-        UGClientResponse *response = [usergridClient setDevicePushToken:[options objectForKey:@"token"] forNotifier:[options objectForKey:@"notifier"]];
-        if (response.transactionState != kUGClientResponseSuccess) {
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"device not linked"];
-            [self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"registerWithPushProvider"]]];
-        } else {
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"device linked"];
-            [self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"registerWithPushProvider"]]];
-        }
-        
-    }
-    
-}
-
--(void)pushNotificationToDevice:(CDVInvokedUrlCommand *)command {
-    [self.callbackIds setValue:command.callbackId forKey:@"pushNotificationToDevice"];
-    NSDictionary *options = [command.arguments objectAtIndex:0];
-    NSString * orgName = [options objectForKey:@"orgName"];
-    NSString * appName = [options objectForKey:@"appName"];
-    NSString * baseUrl = @"https://api.usergrid.com/";
-    if([options objectForKey:@"baseUrl"] != nil) {
-        baseUrl = [options objectForKey:@"baseUrl"];
-    }
-    
-    UGClient * usergridClient = [[UGClient alloc] initWithOrganizationId:orgName withApplicationID:appName baseURL:baseUrl];
-    //[UGClient getUniqueDeviceID];
-    NSString *deviceId = [options objectForKey:@"deviceId"];
-    NSString *thisDevice = [@"devices/" stringByAppendingString: deviceId];
-    NSString *message = [options objectForKey:@"message"];
-    UGClientResponse *response = [usergridClient pushAlert: message
-                                                 withSound: @"chime"
-                                                        to: thisDevice
-                                             usingNotifier: [options objectForKey:@"notifier"]];
-    
-
-    
-    if (response.transactionState != kUGClientResponseSuccess) {
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"message not pushed"];
-        [self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"pushNotificationToDevice"]]];
-    } else {
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"message pushed"];
-        [self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"pushNotificationToDevice"]]];
-    }
-}
-
--(void)getDeviceId:(CDVInvokedUrlCommand*)command {
-    [self.callbackIds setValue:command.callbackId forKey:@"getDeviceId"];
-    NSString * deviceId = [UGClient getUniqueDeviceID];
-    NSMutableDictionary *results = [[NSMutableDictionary alloc] initWithObjectsAndKeys:deviceId, @"deviceId", nil];
-    CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:results];
-    [self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"getDeviceId"]]];
-}
 
 - (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
 	DLog(@"didRegisterForRemoteNotificationsWithDeviceToken:%@", deviceToken);
@@ -298,29 +225,6 @@ NSString * notifier = @"apple";
     
 	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
 	[self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"cancelAllLocalNotifications"]]];
-}
-
-- (void)getDeviceUniqueIdentifier:(CDVInvokedUrlCommand *)command {
-	DLog(@"getDeviceUniqueIdentifier:%@", command);
-    
-	// The first argument in the arguments parameter is the callbackID.
-	[self.callbackIds setValue:command.callbackId forKey:@"getDeviceUniqueIdentifier"];
-	//NSDictionary *options = [command.arguments objectAtIndex:0];
-    
-    NSString* uuid = nil;
-    if ([[UIDevice currentDevice] respondsToSelector:@selector(identifierForVendor)]) {
-        // IOS 6 new Unique Identifier implementation
-        uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    } else {
-        // Before iOS6 you shoud use a custom implementation for uuid
-        // Here I use OpenUDID (you have to import it into your project)
-        // https://github.com/ylechelle/OpenUDID
-        uuid = [OpenUDID value];
-        
-    }
-    
-	CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:uuid];
-	[self writeJavascript:[pluginResult toSuccessCallbackString:[self.callbackIds valueForKey:@"getDeviceUniqueIdentifier"]]];
 }
 
 @end
