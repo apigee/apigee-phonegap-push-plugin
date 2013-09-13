@@ -1,325 +1,89 @@
-# Cordova PushNotification Plugin #
-by [Olivier Louvignes](http://olouv.com)
+## Apigee Push Notification Samples Featuring PhoneGap 2.X
 
-This is a fork by Matthew Dobson for Apigee Corporation. We've added third party push notification support.
+<br/>
+This sample is meant to illustrate of how to integrate push into your PhoneGap based applications for PhoneGap 2.X.
 
-## DESCRIPTION ##
+###Instructions
 
-* This plugin provides a simple way to use Apple Push Notifications (or Remote Notifications) from IOS.
+1. First download this repo as a `.zip`  file.
+2. Next locate the PhoneGap push plugin for your specific version of PhoneGap.
+	1. A good place to start would be [here](https://github.com/phonegap/phonegap-plugins)
+3. Install the plugin into your PhoneGap app
+	1. If you are having trouble doing this consult the [PhoneGap documentation](http://docs.phonegap.com/en/2.8.0/guide_plugin-development_index.md.html#Plugin%20Development%20Guide)
 
-* This was inspired by the now orphaned [ios-phonegap-plugin](https://github.com/urbanairship/ios-phonegap-plugin) build by Urban Airship.
+4. Look in the `www/js/index.js` file for the PhoneGap specific implementation:
 
-## COMPATIBILITY ##
+```
 
-This plugin is compatible with PhoneGap 2.6.
-
-## PLUGIN SETUP FOR IOS ##
-
-Using this plugin requires [Cordova iOS](https://github.com/apache/incubator-cordova-ios).
-
-1. Make sure your Xcode project has been [updated for Cordova](https://github.com/apache/incubator-cordova-ios/blob/master/guides/Cordova%20Upgrade%20Guide.md)
-2. Rename the `src/ios` folder to `PushNotification`, drag and drop it from Finder to your Plugins folder in XCode, using "Create groups for any added folders"
-3. Add the .js files to your `www` folder on disk, and add reference(s) to the .js files using `<script>` tags in your html file(s)
-
-
-    `<script type="text/javascript" src="/js/plugins/PushNotification.js"></script>`
-
-
-4. Add new entry with key `PushNotification` and value `PushNotification` to `Plugins` in `Cordova.plist/Cordova.plist`
-5. Make sure your provisioning profiles are set up to support push notifications. Here's a [great tutorial](http://www.raywenderlich.com/3443/apple-push-notification-services-tutorial-part-12).
-
-### APPDELEGATE SETUP FOR IOS ###
-
-This plugin requires modifications to your `AppDelegate.h`. Append the following line just below other imports.
-
-    #import "PushNotification.h"
-
-It also requires modifications to your `AppDelegate.m`. Append the block below at the end of your file, just before the implementation `@end`.
-
-
-    /* ... */
-
-    /* START BLOCK */
-
-    #pragma - PushNotification delegation
-
-    - (void)application:(UIApplication*)app didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)deviceToken
-    {
-        PushNotification* pushHandler = [self.viewController getCommandInstance:@"PushNotification"];
-        [pushHandler didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
-    }
-
-    - (void)application:(UIApplication*)app didFailToRegisterForRemoteNotificationsWithError:(NSError*)error
-    {
-        PushNotification* pushHandler = [self.viewController getCommandInstance:@"PushNotification"];
-        [pushHandler didFailToRegisterForRemoteNotificationsWithError:error];
-    }
-
-    - (void)application:(UIApplication*)application didReceiveRemoteNotification:(NSDictionary*)userInfo
-    {
-        PushNotification* pushHandler = [self.viewController getCommandInstance:@"PushNotification"];
-        NSMutableDictionary* mutableUserInfo = [userInfo mutableCopy];
-
-        // Get application state for iOS4.x+ devices, otherwise assume active
-        UIApplicationState appState = UIApplicationStateActive;
-        if ([application respondsToSelector:@selector(applicationState)]) {
-            appState = application.applicationState;
-        }
-
-        [mutableUserInfo setValue:@"0" forKey:@"applicationLaunchNotification"];
-        if (appState == UIApplicationStateActive) {
-            [mutableUserInfo setValue:@"1" forKey:@"applicationStateActive"];
-            [pushHandler didReceiveRemoteNotification:mutableUserInfo];
-        } else {
-            [mutableUserInfo setValue:@"0" forKey:@"applicationStateActive"];
-            [mutableUserInfo setValue:[NSNumber numberWithDouble: [[NSDate date] timeIntervalSince1970]] forKey:@"timestamp"];
-            [pushHandler.pendingNotifications addObject:mutableUserInfo];
-        }
-    }
-
-    /* STOP BLOCK */
-
-    @end
-
-In order to support launch notifications (app starting from a remote notification), you have to add the following block inside `- (BOOL) application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions`, just before the return YES;
-
-
-    [self.window addSubview:self.viewController.view];
-    [self.window makeKeyAndVisible];
-
-    /* START BLOCK */
-
-    // PushNotification - Handle launch from a push notification
-    NSDictionary* userInfo = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
-    if(userInfo) {
-        PushNotification *pushHandler = [self.viewController getCommandInstance:@"PushNotification"];
-        NSMutableDictionary* mutableUserInfo = [userInfo mutableCopy];
-        [mutableUserInfo setValue:@"1" forKey:@"applicationLaunchNotification"];
-        [mutableUserInfo setValue:@"0" forKey:@"applicationStateActive"];
-        [pushHandler.pendingNotifications addObject:mutableUserInfo];
-    }
-
-    /* STOP BLOCK */
-
-    return YES;
-
-## PLUGIN SETUP FOR ANDROID ##
-
-Currently using Push Notifications through Apigee is the only method supported.
-
-1. Add the following files to your project.
-   * PushNotification.java
-   * Settings.java
-   * WakeLocker.java
-   * GCMIntentService.java NOTE: This class must share the namespace with your main activity class.
-
-2. Add the following XML Permissions to your Manifest.
-    
-    ```xml
-    <permission android:name="YOUR.APP.NAMESPACE.permission.C2D_MESSAGE" android:protectionLevel="signature" />
-    <uses-permission android:name="YOUR.APP.NAMESPACE.permission.C2D_MESSAGE" />
-    <!-- App receives GCM messages. -->
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <!-- GCM connects to Google Services. -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <!-- GCM requires a Google account. -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <!-- Keeps the processor from sleeping when a message is received. -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
-    ```
-
-3. Add the following XML to your `<application/>` tag.
-    
-    ```xml
-    <receiver android:name="com.google.android.gcm.GCMBroadcastReceiver"
-              android:permission="com.google.android.c2dm.permission.SEND" >
-        <intent-filter>
-            <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-            <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-            <category android:name="YOUR.APP.NAMESPACE" />
-        </intent-filter>
-    </receiver>
-
-    <service android:name="GCMIntentService" />
-    ```
-
-4. Copy all the .jar files in the /libs folder to the /libs folder of your app.
-
-5. Add new entry with key `PushNotification` and value `org.usergrid.cordova.PushNotification` to `Plugins` in `res/xml/config.xml`
-
-
-    <plugin name="PushNotification" value="org.usergrid.cordova.PushNotification"/>
-
-### Setting up the Apigee JavaScript Client
-
-The Apigee JavaScript client is required to register the device and send pushes via Apigee. To initialize simply include it in your webpage.
-
-    <script type="application/javascript" src="apigee.js"></script>
-
-Then Initialize your client in the device ready event handler.
-
-    var apigee = new Apigee.client({
-        orgName:"YOUR APIGEE.COM USERNAME",
-        appName:"YOUR APIGEE.COM APP"
-    });
-
-There are three relevant JavaScript functions needed to register devices and send pushes.
-
-`registerDevice()` performs registration with the Apigee App Services API. It takes an options object and notifier. It then registers the device with App Services.
-
-    var options = {
-        notifier:"YOUR NOTIFIER NAME",
-        deviceToken:status.deviceToken
-    };
-
-    client.registerDevice(options, function(error, result){
-        if(error) {
-            console.log(error);
-        } else {
-            console.log(result);
-        }
-    });
-
-
-`sendPushToDevice()` Sends a push notification to a desired `path` in App Services. The path can represent a single device entity, all devices that belong to a user, or all devices that belong to all users in a specified group.
-
-    //Send push to specific device.
-    var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
-    var options = {
-        notifier:"appleDev",
-        path:devicePath,
-        message:"hello world from JS"
-    };
-    client.sendPushToDevice(options, function(error, data){
-        if(error) {
-            console.log(data);
-        } else {
-            console.log("push sent");
-        }
-    });
-
-`getDeviceUUID()` Gets the unique UUID that Apigee has assigned our device in App Services. This is used to send a push to a specific device.
-
-    //Creates a path to a your current device.
-    var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
-
-
-## JAVASCRIPT INTERFACE (IOS/ANDROID) ##
-
-    // After device ready, create a local alias
-    var pushNotification = window.plugins.pushNotification;
-
-
-
-`registerDevice()` does perform registration on Apple Push Notification servers (via user interaction) & retrieve the token that will be used to push remote notifications to this device.
-
-
-    pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
-        // if successful status is an object that looks like this:
-        // {"type":"7","pushBadge":"1","pushSound":"1","enabled":"1","deviceToken":"blablahblah","pushAlert":"1"}
-        console.warn('registerDevice:%o', status);
-        navigator.notification.alert(JSON.stringify(['registerDevice', status]));
-    });
-
-
-`getPendingNotifications()` should be used when your application starts or become active (from the background) to retrieve notifications that have been pushed while the application was inactive or offline. For now, it can only retrieve the notification that the user has interacted with while entering the app. Returned params `applicationStateActive` & `applicationLaunchNotification` enables you to filter notifications by type.
-
-
-    pushNotification.getPendingNotifications(function(notifications) {
-        console.warn('getPendingNotifications:%o', notifications);
-        navigator.notification.alert(JSON.stringify(['getPendingNotifications', notifications]));
-    });
-
-
-`getRemoteNotificationStatus()` does perform registration check for this device.
-
-
-    pushNotification.getRemoteNotificationStatus(function(status) {
-        console.warn('getRemoteNotificationStatus:%o', status);
-        navigator.notification.alert(JSON.stringify(['getRemoteNotificationStatus', status]));
-    });
-
-
-`setApplicationIconBadgeNumber()` can be used to set the application badge number (that can be updated by a remote push, for instance, resetting it to 0 after notifications have been processed).
-
-
-    pushNotification.setApplicationIconBadgeNumber(12, function(status) {
-        console.warn('setApplicationIconBadgeNumber:%o', status);
-        navigator.notification.alert(JSON.stringify(['setBadge', status]));
-    });
-
-`getApplicationIconBadgeNumber()` get the current value of the application badge number.
-
-    pushNotification.getApplicationIconBadgeNumber( function(badgeNumber) {
-        console.log('badgeNumber: ' +  badgeNumber);
-    });
-
-`cancelAllLocalNotifications()` can be used to clear all notifications from the notification center.
-
-
-    pushNotification.cancelAllLocalNotifications(function() {
-        console.warn('cancelAllLocalNotifications');
-        navigator.notification.alert(JSON.stringify(['cancelAllLocalNotifications']));
-    });
-
-`getDeviceUniqueIdentifier()` can be used to retrieve the original device unique id. (@warning As of today, usage is deprecated and requires explicit consent from the user)
-
-    pushNotification.getDeviceUniqueIdentifier(function(uuid) {
-        console.warn('getDeviceUniqueIdentifier:%s', uuid);
-        navigator.notification.alert(JSON.stringify(['getDeviceUniqueIdentifier', uuid]));
-    });
-
-Finally, when a remote push notification is received while the application is active, an event will be triggered on the DOM `document`.
-
+    //Listening for a push notification
     document.addEventListener('push-notification', function(event) {
-        console.warn('push-notification!:%o', event);
-        navigator.notification.alert(JSON.stringify(['push-notification!', event]));
+        console.log('push-notification!:'+JSON.stringify(event.notification));
+        navigator.notification.alert(event.notification.aps.alert);
     });
 
-* Check [source](https://github.com/mgcrea/cordova-push-notification/tree/master/www/PushNotification.js) for additional configuration.
+    //push registration
+	var pushNotification = window.plugins.pushNotification;
+    pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
+        //Device has been registered with push service (GCM, APNS)
+    });
+```
 
-## BUGS AND CONTRIBUTIONS ##
+5. Fill out your Apigee credentials for push notifications in their specific code.
 
-Patches welcome! Send a pull request. Since this is not a part of Cordova Core (which requires a CLA), this should be easier.
+```
 
-Post issues on [Github](https://github.com/mgcrea/cordova-plugin-seed/issues)
-
-The latest code (my fork) will always be [here](https://github.com/mgcrea/cordova-plugin-seed/tree/master)
-
-## LICENSE ##
-
-    The MIT License
-
-    Copyright (c) 2012 Olivier Louvignes
-    Copyright (c) 2013 Apigee Corporation where applicable
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in
-    all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-    THE SOFTWARE.
-
-## CREDITS ##
-
-Inspired by :
-
-* [ios-phonegap-plugin](https://github.com/urbanairship/ios-phonegap-plugin) build by Urban Airship.
-
-Contributors :
-
-* [Olivier Louvignes](http://olouv.com)
-
+		//Create an Apigee Client
+        var client = new Apigee.Client({
+            orgName:"YOUR APIGEE.COM USERNAME",
+            appName:"sandbox",
+            logging:true
+        });
+        
+        //Attach PhoneGap push plugin to Window
+        var pushNotification = window.plugins.pushNotification;
+        //Register the device with the APNS and/or GCM
+        pushNotification.registerDevice({alert:true, badge:true, sound:true}, function(status) {
+        	//If a token was returned
+            if(status.deviceToken) {
+                //Setup device registration with Apigee
+                var options = {
+                	 //Alter to have your notifier name
+                    notifier:"YOUR NOTIFIER",
+                    deviceToken:status.deviceToken
+                };
+                
+                //Register the actual device
+                client.registerDevice(options, function(error, result){
+                  if(error) {
+                    console.log(error);
+                  } else {
+                    console.log(result);
+                  }
+                });
+            }
+        });
+        
+        $("#push").on("click", function(e){
+            //push here
+            
+            //Get the devices UUID that was assigned to it from Apigee
+            var devicePath = "devices/"+client.getDeviceUUID()+"/notifications";
+            //Setup a push notification object
+            var options = {
+                //Alter to have your Notifier name
+                notifier:"YOUR NOTIFIER",
+                path:devicePath,
+                message:"hello world from JS"
+            };
+            //Send the push notification to the device.
+            client.sendPushToDevice(options, function(error, data){
+                if(error) {
+                    console.log(data);
+                } else {
+                    console.log("push sent");
+                }
+            });
+        });
+        
+```
+6. Run on device or simulator. A single screen with one button should appear, and upon pressing the button a push notification should appear.
